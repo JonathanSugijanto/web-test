@@ -1,0 +1,85 @@
+<div id="container"><div>
+
+<script src="../js/26b39.js"></script>
+<script src="../js/26b41.js"></script>
+<script src="../js/26b43.js"></script>
+
+<script>
+// Instantiate containers, output textarea, and buttons
+const cnt = getContainer("container");
+const inTxa = createTextarea("text-input");
+const outTxa = createTextarea("text-output");
+const btnDiv = createDiv("button-container");
+const deBtn = createButton("de-button", "Default");
+const owBtn = createButton("ow-button", "Overwrite");
+const addBtn = createButton("add-button", "Add lines");
+const coBtn = createButton("co-button", "Clear output");
+const ciBtn = createButton("ci-button", "Clear input");
+const ppBtn = createButton("pp-button", "Pop push");
+
+// Append textarea to container
+cnt.append(inTxa);
+cnt.append(btnDiv);
+cnt.append(outTxa);
+btnDiv.append(ciBtn);
+btnDiv.append(coBtn);
+btnDiv.append(deBtn);
+btnDiv.append(owBtn);
+btnDiv.append(addBtn);
+btnDiv.append(ppBtn);
+
+// Change elements flex value
+changeElementsFlex(
+  ["text-input", "3"],
+  ["button-container", "3"] , 
+  ["text-output", "3"],
+);
+
+// Bind consolex output to textarea and set EOL character
+consolex.setOutput(outTxa);
+consolex.setEOL("");
+
+// Set onclick event to each button
+ciBtn.addEventListener("click", () => {
+  clearTextarea("text-input");
+});
+coBtn.addEventListener("click", () => {
+  clearTextarea("text-output");
+});
+deBtn.addEventListener("click", () => {
+  inTxa.value = "This is the default text."; 
+  inTxa.value += "\n" + "Consisting of multiple lines.";
+  inTxa.value += "\n" + "like";
+  inTxa.value += "\n" + "so";
+});
+owBtn.addEventListener("click", () => {
+  copyTextareaFromTo("text-input", "text-output");
+});
+addBtn.addEventListener("click", () => {
+  appendTextareaFromTo("text-input", "text-output");
+});
+ppBtn.addEventListener("click", () => {
+  let inLines = inTxa.value.split("\n");
+  let outLines = outTxa.value.split("\n");
+
+  if(inLines.length == 1 && inLines[0] == "") {
+    inLines = [];
+  }
+  if(outLines.length == 1 && outLines[0] == "") {
+    outLines = [];
+  }
+  
+  let item = "";
+  if(inLines.length > 0) {
+    item = inLines.pop();
+  }  
+  if(item.length > 0) {
+    outLines.push(item);
+  }
+  
+  inTxa.value = inLines.join("\n");
+  outTxa.value = outLines.join("\n");
+  
+  outTxa.scrollTop = outTxa.scrollHeight;
+});
+</script>

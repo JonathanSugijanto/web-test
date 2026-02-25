@@ -1,0 +1,48 @@
+<div id="container"><div>
+
+<script src="../js/26b39.js"></script>
+<script src="../js/26b41.js"></script>
+
+<script>
+// Instantiate containers, output textarea, and buttons
+const cnt = getContainer("container");
+const txa = createTextarea("text-output");
+const btnDiv = createDiv("button-container");
+const dBtn = createButton("d-button", "Dinosaur");
+const wBtn = createButton("w-button", "Whale");
+const crBtn = createButton("cr-button", "Crab");
+const tBtn = createButton("t-button", "Turtle");
+const xBtn = createButton("x-button", "Newline");
+const cBtn = createButton("c-button", "Clear");
+
+// Append textarea to container
+cnt.append(txa);
+cnt.append(btnDiv);
+btnDiv.append(dBtn);
+btnDiv.append(wBtn);
+btnDiv.append(crBtn);
+btnDiv.append(tBtn);
+btnDiv.append(xBtn);
+btnDiv.append(cBtn);
+
+// Change elements flex value
+changeElementsFlex(
+  ["text-output", "3"],
+  ["button-container", "1"]  
+);
+
+// Bind consolex output to textarea and set EOL character
+consolex.setOutput(txa);
+consolex.setEOL("");
+
+// Define list of animal icons
+const animals = ["🦖", "🐋", "🦀", "🐢"];
+
+// Set onclick event to each button
+dBtn.addEventListener("click", () => {txa.value += animals[0];});
+wBtn.addEventListener("click", () => {txa.value += animals[1];});
+crBtn.addEventListener("click", () => {txa.value += animals[2];});
+tBtn.addEventListener("click", () => {txa.value += animals[3];});
+xBtn.addEventListener("click", () => {txa.value += "\n";});
+cBtn.addEventListener("click", () => {txa.value="";});
+</script>

@@ -1,0 +1,26 @@
+<html>
+    <div id="container"><div>
+
+    <script src="../js/26b39.js"></script>
+
+    <script>
+    // Instantiate container and output textarea
+    let cnt = getContainer("container");
+    let txa = createTextarea("text-output");
+
+    // Append textarea to container
+    cnt.append(txa);
+
+    // Bind consolex output to textarea
+    consolex.setOutput(txa);
+
+    // Emit test log entries
+    consolex.log("Hello, World!", "How are you?");
+    consolex.log("I can write all kinds of things in here, including numbers:", 42, "and emojis:", "🦖");
+    consolex.log("Just like python, I can enter using \\n, \nlike\nthis!");
+    consolex.log("This textarea is small though, so use the scroll bar to see all the content! ( •_•)>");
+    consolex.log("Lastly, I can use \\t to tab:\n\tThis \n\t\tis \n\t\t\ttabbed \n\t\t\t\tin!");
+
+    </script>
+    
+</html>
