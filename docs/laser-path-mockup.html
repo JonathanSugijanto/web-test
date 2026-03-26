@@ -113,6 +113,9 @@ button:disabled {
 <textarea id="laser-input">0;0.5;0;#ff0000</textarea>
 <button class="run-btn" id="run-btn" disabled>Run</button>
 
+<label><b>Output Terminal</b></label>
+<textarea id="output-terminal" readonly placeholder="Simulation status and results will appear here..."></textarea>
+
 </div>
 
 <div class="right-panel">
@@ -148,6 +151,16 @@ The index of refraction of the medium, as a function of x and y. The expression 
 The specification of the laser(s) to be simulated. Each laser is defined by its rectangle side hit (left (0), top (1)), position of incidence (normalized distance from the top left corner of the rectangle), angle relative to the normal of the sides (in degrees), and display color (in hex format). Multiple lasers can be specified by separating them with new lines. 
 </li>
 </ul>
+
+<p>This application has two outputs:</p>
+<ul>
+<li>Canvas<br>
+Visual representation of the light paths inside and outside the medium. The rectangle itelf will be colored according to the index of refraction, with darker color representing higher index.
+</li>
+<li>Output Terminal<br>
+Textual display of simulation status and results.
+</li>
+</ul>
 </div>
 
 <div id="method" class="info-block">
@@ -157,7 +170,7 @@ The specification of the laser(s) to be simulated. Each laser is defined by its 
 </div>
 
 <div class="footer">
-<a href="index.html">← Go back</a>
+<a href="./index.html">← Go back</a>
 </div>
 
 <script>
