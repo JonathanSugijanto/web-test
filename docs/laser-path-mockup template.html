@@ -1,0 +1,49 @@
+<div id="container">
+
+  <script src="./js/26b39.js"></script>
+  <script src="./js/26b41.js"></script>
+  <script src="./js/26b43.js"></script>
+  <script src="./js/26b56.js"></script>
+
+  <script>
+  // Instantiate containers, output textarea, and buttons
+  const cnt = getContainer("container");
+
+  const inTxa = createTextarea("text-input", "10em");
+  const outCan = createCanvas("graphic-output");
+  const canDiv = createDiv("canvas-container");
+  const btnDiv = createDiv("button-container");
+  const deBtn = createButton("de-button", "Default");
+  const plBtn = createButton("pl-button", "Draw");
+
+  // Append textarea to container
+  cnt.append(inTxa);
+  cnt.append(btnDiv);
+    btnDiv.append(deBtn);
+    btnDiv.append(plBtn);
+  cnt.append(canDiv);
+    canDiv.append(outCan);
+
+  // Change elements flex value
+  changeElementsFlex(
+    ["text-input", "5"],
+    ["button-container", "1"] , 
+    ["canvas-container", "5"] , 
+  );
+
+  // Set onclick event to each button
+  deBtn.addEventListener("click", () => {
+    inTxa.value = "40;30;10;#f00";
+    inTxa.value += "\n" + "40;100;20;#0f0";
+    inTxa.value += "\n" + "100;50;20;#00f";
+    inTxa.value += "\n" + "100;100;10;#888";
+  });
+  plBtn.addEventListener("click", () => {
+    const dataset = readDataFromTextarea("text-input");
+    drawCirclesOnCanvas("graphic-output", dataset);
+  });
+  </script>
+</div>
+
+<br>
+<a href="index.html">← Go back</a>

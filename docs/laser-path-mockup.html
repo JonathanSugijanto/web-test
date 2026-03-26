@@ -1,49 +1,226 @@
-<div id="container">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Light Path Simulator</title>
 
-  <script src="./js/26b39.js"></script>
-  <script src="./js/26b41.js"></script>
-  <script src="./js/26b43.js"></script>
-  <script src="./js/26b56.js"></script>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  background: #f5f5f5;
+}
 
-  <script>
-  // Instantiate containers, output textarea, and buttons
-  const cnt = getContainer("container");
+h1 {
+  margin-bottom: 5px;
+}
 
-  const inTxa = createTextarea("text-input", "10em");
-  const outCan = createCanvas("graphic-output");
-  const canDiv = createDiv("canvas-container");
-  const btnDiv = createDiv("button-container");
-  const deBtn = createButton("de-button", "Default");
-  const plBtn = createButton("pl-button", "Draw");
+.container {
+  display: flex;
+  gap: 20px;
+}
 
-  // Append textarea to container
-  cnt.append(inTxa);
-  cnt.append(btnDiv);
-    btnDiv.append(deBtn);
-    btnDiv.append(plBtn);
-  cnt.append(canDiv);
-    canDiv.append(outCan);
+.left-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
-  // Change elements flex value
-  changeElementsFlex(
-    ["text-input", "5"],
-    ["button-container", "1"] , 
-    ["canvas-container", "5"] , 
-  );
+.right-panel {
+  flex: 1;
+}
 
-  // Set onclick event to each button
-  deBtn.addEventListener("click", () => {
-    inTxa.value = "40;30;10;#f00";
-    inTxa.value += "\n" + "40;100;20;#0f0";
-    inTxa.value += "\n" + "100;50;20;#00f";
-    inTxa.value += "\n" + "100;100;10;#888";
-  });
-  plBtn.addEventListener("click", () => {
-    const dataset = readDataFromTextarea("text-input");
-    drawCirclesOnCanvas("graphic-output", dataset);
-  });
-  </script>
+textarea, input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+textarea {
+  resize: vertical;
+  height: 70px;
+}
+
+button {
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: #aaa;
+  cursor: not-allowed;
+}
+
+.apply-btn {
+  background: #4CAF50;
+  color: white;
+}
+
+.run-btn {
+  background: #2196F3;
+  color: white;
+}
+
+.canvas-container {
+  width: 100%;
+  height: 600px;
+  background: white;
+  border: 1px solid black;
+}
+
+.info-block {
+  margin-top: 40px;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.toc a {
+  display: block;
+  margin: 5px 0;
+  color: blue;
+}
+
+.footer {
+  margin-top: 20px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>Light Path Simulator</h1>
+<p id="description">A simulator for light path in a medium with spatially varying refractive index.</p>
+<p id="meta"></p>
+
+<div class="container">
+
+<div class="left-panel">
+
+<label><b>Index of Refraction</b></label>
+<p>n(x,y) =</p>
+<input id="n-input" type="text" value="x^2 + y^2">
+<button class="apply-btn" id="apply-btn">Apply</button>
+
+<label><b>Laser Spec</b></label>
+<textarea id="laser-input">0;0.5;0;#ff0000</textarea>
+<button class="run-btn" id="run-btn" disabled>Run</button>
+
 </div>
 
-<br>
+<div class="right-panel">
+<div class="canvas-container">
+<canvas id="canvas"></canvas>
+</div>
+</div>
+
+</div>
+
+<div class="info-block toc">
+<h2>Table of Contents</h2>
+<a href="#simulation">Simulation Description</a>
+<a href="#usage">How to Use</a>
+<a href="#method">How It Works</a>
+</div>
+
+<div id="simulation" class="info-block">
+<h2>Simulation Description</h2>
+<p>This web simulates the path of light from one or more laser in a custom medium. The simulation is based on Snell's Law, so reflection and intensity variation are not accounted for. In addition, the simulation is limited in a 2D space with a rectangular medium.</p>
+<p>In this mockup version, the simulation doesn't work yet. The visualization given is just a placeholder.</p>
+</div>
+
+<div id="usage" class="info-block">
+<h2>How to Use</h2>
+<p>This application has two inputs:</p>
+<ul>
+<li>n(x,y): math expression <br>
+The index of refraction of the medium, as a function of x and y. The expression should be parsable by JavaScript's eval() function, with x and y as variables. For example, "x^2 + y^2" or "Math.sin(x) * Math.cos(y)".</li>
+</li>
+
+<li>Laser spec: side;position;angle;color <br>
+The specification of the laser(s) to be simulated. Each laser is defined by its rectangle side hit (left (0), top (1)), position of incidence (normalized distance from the top left corner of the rectangle), angle relative to the normal of the sides (in degrees), and display color (in hex format). Multiple lasers can be specified by separating them with new lines. 
+</li>
+</ul>
+</div>
+
+<div id="method" class="info-block">
+<h2>How It Works</h2>
+<p>The rectangle is split into a grid of cells. In this grid, the laser is treated as an object that occupies a single cell and have a direction of travel. In each iteration, the object has a probability of going either one step along the x axis or y axis with the probability proportional to the direction's components. Everytime the object moves by one cell, Snell's Law is applied. Using the the target and origin cell's index of refraction as well as the initial direction, the new direction after refraction is calculated. The interface of the refraction is taken to be the border between cells.</p>
+<p>The simulation is run until all lasers exit the medium or a maximum number of iterations is reached. The position of each laser is tracked throughout the simulation and displayed on the canvas.</p>
+</div>
+
+<div class="footer">
 <a href="index.html">← Go back</a>
+</div>
+
+<script>
+
+const meta = document.getElementById("meta");
+// const date = new Date().toLocaleDateString();
+meta.innerText = "Author: Jonathan Sugijanto | Launch Date: 3/27/2024";
+
+const applyBtn = document.getElementById("apply-btn");
+const runBtn = document.getElementById("run-btn");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+function resizeCanvas() {
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight;
+}
+
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+let applied = false;
+
+applyBtn.onclick = () => {
+  applied = true;
+  runBtn.disabled = false;
+
+  // placeholder visualization
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = "lightblue";
+
+  const w = canvas.width * 0.8;
+  const h = canvas.height * 0.8;
+  const x = canvas.width * 0.1;
+  const y = canvas.height * 0.1;
+
+  ctx.fillRect(x,y,w,h);
+};
+
+runBtn.onclick = () => {
+  if(!applied) return;
+
+  runBtn.disabled = true;
+  applyBtn.disabled = true;
+
+  const originalText = runBtn.innerText;
+  runBtn.innerText = "Running...";
+
+  setTimeout(() => {
+    // placeholder for ray drawing
+    ctx.strokeStyle = "red";
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height/2);
+    ctx.lineTo(canvas.width, canvas.height/2);
+    ctx.stroke();
+
+    runBtn.innerText = originalText;
+    runBtn.disabled = false;
+    applyBtn.disabled = false;
+  }, 1000);
+};
+
+</script>
+
+</body>
+</html>
