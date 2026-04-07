@@ -55,23 +55,39 @@ function getContainer(id, width = "320px") {
  * @example
  * const txa = createTextarea("text-output");
  */
-function createTextarea(id, height = "12em") {
+function createTextarea(id, height = null, placeholder = "") {
   /** @type {HTMLTextAreaElement} */
   const el = document.createElement("textarea");
 
   el.id = id;
+  el.placeholder = placeholder;
 
-  const styles = {
-    flex: "1",
-    height: typeof height === "number" ? `${height}px` : height,
-    overflowY: "scroll",
-    fontFamily: "monospace",
-    fontSize: "12px",
-    lineHeight: "1.5",
-    padding: "0.25em 0.5em",
-    resize: "none",
-    boxSizing: "border-box",
-  };
+  let styles;
+  if (height !== null) {
+    styles = {
+      flex: "1",
+      height: typeof height === "number" ? `${height}px` : height,
+      overflowY: "scroll",
+      fontFamily: "monospace",
+      fontSize: "12px",
+      lineHeight: "1.5",
+      padding: "0.25em 0.5em",
+      resize: "none",
+      boxSizing: "border-box",
+    };
+  } else {
+    styles = {
+      flex: "1",
+      height: "100%",
+      overflowY: "scroll",
+      fontFamily: "monospace",
+      fontSize: "12px",
+      lineHeight: "1.5",
+      padding: "0.25em 0.5em",
+      resize: "none",
+      boxSizing: "border-box",
+    };
+  }
 
   Object.assign(el.style, styles);
 

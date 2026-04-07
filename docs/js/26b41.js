@@ -65,12 +65,13 @@ function changeElementsFlex(...args) {
  * @example
  * const btn = createButton("start-btn", "Start");
 */
-function createButton(id, caption) {
+function createButton(id, caption, disabled = false) {
   /** @type {HTMLButtonElement} */
   const el = document.createElement("button");
   
   el.id = id;
   el.innerHTML = caption;
+  el.disabled = disabled;
   
   const styles = {
     display: "block",

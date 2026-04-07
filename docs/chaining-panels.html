@@ -1,0 +1,384 @@
+<div id="container">
+
+  <script src="./js/26b39.js"></script>
+  <script src="./js/26b41.js"></script>
+  <script src="./js/26b43.js"></script>
+  <script src="./js/26b56.js"></script>
+  <script src="./js/26c11.js"></script>
+  <script>
+    function generateRandomGridData(cols, rows, umin, umax, unum, sepc=";") {
+      const grid = [];
+      const gridTxt = [];
+
+      // step size (IMPORTANT: unum includes endpoints)
+      const step = (umax - umin) / (unum - 1);
+
+      // build allowed values
+      const values = [];
+      for (let i = 0; i < unum; i++) {
+        values.push(umin + i * step);
+      }
+
+      // generate grid
+      for (let r = 0; r < rows; r++) {
+        const row = [];
+        const rowTxt = [];
+
+        for (let c = 0; c < cols; c++) {
+          // pick random value from allowed set
+          const v = values[Math.floor(Math.random() * values.length)];
+
+          // format like ".45" instead of "0.45"
+          const vTxt = v.toFixed(2).replace(/^0/, "");
+
+          row.push(v);
+          rowTxt.push(vTxt);
+        }
+        grid.push(row);
+        gridTxt.push(rowTxt.join(sepc));
+      }
+
+      // return as multiline string
+      return grid, gridTxt.join("\n");
+    }
+    function readGridDataFromTextarea(id, sepc=";") {
+      const el = document.getElementById(id);
+      if (!(el instanceof HTMLTextAreaElement)) return null;
+
+      const lines = el.value.trim().split("\n");
+
+      const grid = lines.map(line => {
+        return line.split(sepc).map(v => parseFloat(v));
+      });
+
+      return grid; // 2D array [rows][cols]
+    }
+    function drawGridOnCanvas(canvasId, grid, CL_arr, umin, umax, unum=null) {
+      if(unum === null) {
+        // infer from CL_arr length
+        unum = CL_arr.length;
+      }
+      
+      const canvas = document.getElementById(canvasId);
+      if (!(canvas instanceof HTMLCanvasElement)) return;
+
+      const ctx = canvas.getContext("2d");
+
+      const rows = grid.length;
+      const cols = grid[0].length;
+
+      // set canvas size (important!)
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+
+      const cellW = canvas.width / cols;
+      const cellH = canvas.height / rows;
+
+      const step = (umax - umin) / (unum - 1);
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const v = grid[r][c];
+
+          // compute index
+          let idx = Math.round((v - umin) / step);
+
+          // clamp (safety)
+          idx = Math.max(0, Math.min(CL_arr.length - 1, idx));
+
+          ctx.fillStyle = CL_arr[idx];
+          ctx.fillRect(c * cellW, r * cellH, cellW, cellH);
+        }
+      }
+    }
+
+    function generateRandomChooseData(N, xmin, xmax, ymin, ymax) {
+      const chooseData = [];
+      for (let i = 0; i < N; i++) {
+        let x = Math.floor(Math.random() * (xmax - xmin + 1)) + xmin;
+        let y = Math.floor(Math.random() * (ymax - ymin + 1)) + ymin;
+        if(x == xmax) x = xmax - 1; // ensure within bounds
+        if(y == ymax) y = ymax - 1; // ensure within bounds
+        chooseData.push({x, y});
+      }
+      console.log(`Generated choose point: (${chooseData[0].x}, ${chooseData[0].y}), (${chooseData[1].x}, ${chooseData[1].y})`);
+      return chooseData;
+    }
+
+    function chooseGridOnCanvas(canvasId, chooseData, rows, cols, CL_arr) {
+      const canvas = document.getElementById(canvasId);
+      if (!(canvas instanceof HTMLCanvasElement)) return;
+
+      const ctx = canvas.getContext("2d");
+
+      const cellW = canvas.width / cols;
+      const cellH = canvas.height / rows;
+
+      chooseData.forEach((point, idx) => {
+        const {x, y} = point;
+        ctx.fillStyle = CL_arr[idx % CL_arr.length];
+        ctx.fillRect(x * cellW, y * cellH, cellW, cellH);
+      });
+    }
+  </script>
+
+  <script>
+  // define global variables
+  let cols, rows, umin, umax, unum, sepc;
+  let gridOutput, chooseOutput; 
+  let CL_arr;
+  let xmin, xmax, ymin, ymax;
+
+  // Instantiate containers, textarea, canvas, and buttons
+  const cnt = getContainer("container");
+  const topDiv = createDiv("top-panel");
+  const bottomDiv = createDiv("bottom-panel");
+  
+  const div1 = createDiv("panel-1");
+  const inTx1 = createTextarea("params-1", "15em", "params-1");
+  const outTx1 = createTextarea("grid", "15em", "grid");
+  const btn1Div = createDiv("button-1-container");
+  const w1Btn = createButton("w1-button", "wipe-1");
+  const d1Btn = createButton("d1-button", "data-1");
+  const r1Btn = createButton("r1-button", "read-1", disabled=true);
+  const e1Btn = createButton("e1-button", "exec-1", disabled=true);
+
+  const div2 = createDiv("panel-2");
+  const inTx2 = createTextarea("params-2", "15em", "params-2");
+  const outCan2 = createCanvas("grid-output", "11em");
+  const outCan2Div = createDiv("grid-output-container");
+  const btn2Div = createDiv("button-2-container");
+  const w2Btn = createButton("w2-button", "wipe-2");
+  const d2Btn = createButton("d2-button", "data-2");
+  const r2Btn = createButton("r2-button", "read-2", disabled=true);
+  const e2Btn = createButton("e2-button", "exec-2", disabled=true);
+
+  const div3 = createDiv("panel-3");
+  const inTx3 = createTextarea("params-3", "15em", "params-3");
+  const outCan3 = createCanvas("choose-output", "11em");
+  const outCan3Div = createDiv("choose-output-container");
+  const btn3Div = createDiv("button-3-container");
+  const w3Btn = createButton("w3-button", "wipe-3");
+  const d3Btn = createButton("d3-button", "data-3");
+  const r3Btn = createButton("r3-button", "read-3", disabled=true);
+  const e3Btn = createButton("e3-button", "exec-3", disabled=true);
+
+  const wBtnDiv = createDiv("w-button-container");
+  const wBtn = createButton("w-button", "wipe");
+
+
+  //Define layout by appending elements to the container and panels
+  cnt.append(topDiv);
+    topDiv.append(div1);
+      div1.append(inTx1);
+      div1.append(btn1Div);
+        btn1Div.append(w1Btn);
+        btn1Div.append(d1Btn);
+        btn1Div.append(r1Btn);
+        btn1Div.append(e1Btn);
+      div1.append(outTx1);
+    topDiv.append(div2);
+      div2.append(inTx2);
+      div2.append(btn2Div);
+        btn2Div.append(w2Btn);
+        btn2Div.append(d2Btn);
+        btn2Div.append(r2Btn);
+        btn2Div.append(e2Btn);
+      div2.append(outCan2Div);
+        outCan2Div.append(outCan2);
+  
+  cnt.append(bottomDiv);
+    bottomDiv.append(div3);
+      div3.append(inTx3);
+      div3.append(btn3Div);
+        btn3Div.append(w3Btn);
+        btn3Div.append(d3Btn);
+        btn3Div.append(r3Btn);
+        btn3Div.append(e3Btn);
+      div3.append(outCan3Div);
+        outCan3Div.append(outCan3);
+    bottomDiv.append(wBtnDiv);
+      wBtnDiv.append(wBtn);
+  
+  cnt.style.display = "flex";
+  cnt.style.flexDirection = "column";
+    topDiv.style.display = "flex";
+    topDiv.style.flexDirection = "row";
+      div1.style.display = "flex";
+      div1.style.flexDirection = "row";
+      div2.style.marginLeft = "10px";
+      div2.style.display = "flex";
+      div2.style.flexDirection = "row";
+    bottomDiv.style.display = "flex";
+    bottomDiv.style.flexDirection = "row";
+      div3.style.display = "flex";
+      div3.style.flexDirection = "row";
+      wBtnDiv.style.alignSelf = "flex-start";
+      wBtnDiv.style.marginLeft = "10px";
+      // wBtn.style.marginRight = "10px";
+        wBtn.style.maginLeft = "20px";
+        wBtn.style.width = "20%";
+        wBtn.style.height = "auto";
+
+  // Change elements flex value
+  cnt.style.height = "370px";
+  cnt.style.width = "100%";
+  changeElementsFlex(
+    ["top-panel", "1"],
+    ["bottom-panel", "1"],
+
+    ["panel-1", "1"],
+    ["panel-2", "1"],
+
+    ["params-1", "2"],
+    ["button-1-container", "1"] , 
+    ["grid", "2"] , 
+
+    ["params-2", "2"],
+    ["button-2-container", "1"] , 
+    ["grid-output-container", "2"] , 
+
+    ["panel-3", "1"],
+    ["w-button-container", "1"],
+
+    ["params-3", "2"],
+    ["button-3-container", "1"] , 
+    ["choose-output-container", "2"] , 
+  );
+
+  // Set onclick event to each button
+  w1Btn.addEventListener("click", () => {
+    inTx1.value = "";
+    outTx1.value = "";
+  });
+  d1Btn.addEventListener("click", () => {
+    inTx1.value = "COLS 9";
+    inTx1.value += "\n" + "ROWS 11";
+    inTx1.value += "\n" + "UMIN 0.20";
+    inTx1.value += "\n" + "UMAX 0.70";
+    inTx1.value += "\n" + "UNUM 11";
+    inTx1.value += "\n" + "SEPC ;";
+
+    r1Btn.disabled = false;
+  });
+  r1Btn.addEventListener("click", () => {
+    let key, line;
+    
+    key = "COLS";
+    cols = readParamFromTextarea("params-1", key, type="int");
+    key = "ROWS";
+    rows = readParamFromTextarea("params-1", key, type="int");
+    key = "UMIN";
+    umin = readParamFromTextarea("params-1", key, type="float");
+    key = "UMAX";
+    umax = readParamFromTextarea("params-1", key, type="float");
+    key = "UNUM";
+    unum = readParamFromTextarea("params-1", key, type="float");
+    key = "SEPC";
+    sepc = readParamFromTextarea("params-1", key);
+
+    e1Btn.disabled = false;
+  });
+  e1Btn.addEventListener("click", () => {
+    // generate random grid data with
+    // cols x row size and values = [umin, umax]
+    // the data is in steps of (umax-umin)/unum
+    let gridOutputTxt;
+    gridOutput, gridOutputTxt = generateRandomGridData(cols, rows, umin, umax, unum);
+    outTx1.value = gridOutputTxt;
+  });
+
+  w2Btn.addEventListener("click", () => {
+    inTx2.value = "";
+    outCan2.getContext("2d").clearRect(0, 0, outCan2.width, outCan2.height);
+  });
+  d2Btn.addEventListener("click", () => {
+    inTx2.value = "CNUM 11";
+    inTx2.value += "\n" + "CL00 #522";
+    inTx2.value += "\n" + "CL01 #622";
+    inTx2.value += "\n" + "CL02 #722";
+    inTx2.value += "\n" + "CL03 #822";
+    inTx2.value += "\n" + "CL04 #922";
+    inTx2.value += "\n" + "CL05 #a22";
+    inTx2.value += "\n" + "CL06 #b22";
+    inTx2.value += "\n" + "CL07 #c22";
+    inTx2.value += "\n" + "CL08 #d22";
+    inTx2.value += "\n" + "CL09 #e22";
+    inTx2.value += "\n" + "CL10 #f22";
+
+    r2Btn.disabled = false;
+  });
+  r2Btn.addEventListener("click", () => {
+    let key, line;
+    
+    CL_arr = [];
+    for (let i = 0; i < unum; i++) {
+      key = "CL" + i.toString().padStart(2, "0");
+      CL_arr.push(readParamFromTextarea("params-2", key));
+    }
+
+    e2Btn.disabled = false;
+  });
+  e2Btn.addEventListener("click", () => {
+    gridOutput = readGridDataFromTextarea("grid");
+    drawGridOnCanvas("grid-output", gridOutput, CL_arr, umin, umax, unum);
+  });
+
+  w3Btn.addEventListener("click", () => {
+    inTx3.value = "";
+    outCan3.getContext("2d").clearRect(0, 0, outCan3.width, outCan3.height);
+  });
+  d3Btn.addEventListener("click", () => {
+    inTx3.value = "XMIN 0";
+    inTx3.value += "\n" + "YMIN 0";
+    inTx3.value += "\n" + "XMAX 9";
+    inTx3.value += "\n" + "YMAX 11";
+
+    r3Btn.disabled = false;
+  });
+  r3Btn.addEventListener("click", () => {
+    let key, line;
+    
+    key = "XMIN";
+    xmin = readParamFromTextarea("params-3", key, type="int");
+    key = "YMIN";
+    ymin = readParamFromTextarea("params-3", key, type="int");
+    key = "XMAX";
+    xmax = readParamFromTextarea("params-3", key, type="int");
+    key = "YMAX";
+    ymax = readParamFromTextarea("params-3", key, type="int");
+
+    e3Btn.disabled = false;
+  });
+  e3Btn.addEventListener("click", () => {
+    gridOutput = readGridDataFromTextarea("grid");
+    drawGridOnCanvas("choose-output", gridOutput, CL_arr, umin, umax, unum);
+    chooseOutput = generateRandomChooseData(2, xmin, xmax, ymin, ymax);
+    CL_choose_arr = ["#00f", "#0f0"]; // blue, green
+    chooseGridOnCanvas("choose-output", chooseOutput, rows, cols, CL_choose_arr);
+  });
+
+  wBtn.addEventListener("click", () => {
+    // wipe all panels and reset variables
+    inTx1.value = "";
+    outTx1.value = "";
+    inTx2.value = "";
+    outCan2.getContext("2d").clearRect(0, 0, outCan2.width, outCan2.height);
+    inTx3.value = "";
+    outCan3.getContext("2d").clearRect(0, 0, outCan3.width, outCan3.height);
+
+    cols = rows = umin = umax = unum = sepc = null;
+    gridOutput = chooseOutput = CL_arr = null;
+
+    r1Btn.disabled = true;
+    e1Btn.disabled = true;
+    r2Btn.disabled = true;
+    e2Btn.disabled = true;
+    r3Btn.disabled = true;
+    e3Btn.disabled = true;
+  });
+  </script>
+</div>
+
+<br>
+<a href="index.html">← Go back</a>

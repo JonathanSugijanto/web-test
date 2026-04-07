@@ -21,20 +21,32 @@
 * @example
 * const can = createCanvas("canvas-output");
 */
-function createCanvas(id) {
+function createCanvas(id, height = null) {
   /** @type {HTMLCavnasElement} */
   const el = document.createElement("canvas");
   
   el.id = id;
-  
-  const styles = {
-    flex: "1",
-    background: "var(--box-bg)",
-    width: "100%",
-    height: "100%",
-    display: "block",
-    border: "1px solid black",
-  };
+
+  let styles;
+  if(height== null) {
+    styles = {
+      flex: "1",
+      background: "var(--box-bg)",
+      width: "100%",
+      height: "100%",
+      display: "block",
+      border: "1px solid black",
+    };
+  } else {
+    styles = {
+      flex: "1",
+      background: "var(--box-bg)",
+      width: "100%",
+      height: typeof height === "number" ? `${height}px` : height,
+      display: "block",
+      border: "1px solid black",
+    };
+  }
   
   Object.assign(el.style, styles);
   
