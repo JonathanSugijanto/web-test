@@ -335,8 +335,8 @@
 
   const div5 = createDiv("panel-5");
   const inTx5Div = createDiv("params-5-container");
-  const inTx5 = createTextarea("params-5", "6em", "params-input");
-  const inAg5 = createTextarea("agents-5", "6em", "agents-input");
+  const inTx5 = createTextarea("params-5", "10em", "params-input");
+  const inAg5 = createTextarea("agents-5", "10em", "agents-input");
   const btn5Div = createDiv("button-5-container");
   const w5Btn = createButton("w5-button", "wipe");
   const d5Btn = createButton("d5-button", "data");
@@ -344,7 +344,7 @@
   const e5Btn = createButton("e5-button", "exec", disabled=true);
   const n5Btn = createButton("n5-button", "none", disabled=true);
   const i5Btn = createButton("i5-button", "info");
-  const outCan5 = createCanvas("output-5", "7em");
+  const outCan5 = createCanvas("output-5", "11em");
 
   const div6 = createDiv("panel-6");
 
@@ -423,7 +423,7 @@
         inTx5Div.style.flexDirection = "row";
         btn5Div.style.display = "flex";
         btn5Div.style.flexDirection = "row";
-        // btn5Div.style.height = "40px";
+        btn5Div.style.height = "40px";
       div6.style.display = "flex";
       div6.style.flexDirection = "column";
       div6.style.marginLeft = "10px";
@@ -483,7 +483,7 @@
 
     const btn = createButton("prog-btn-" + i, buttonLabels[i - 1]);
 
-    btn.style.width = "60px";
+    btn.style.width = "80px";
 
     const outer = createDiv("bar-outer-" + i);
     outer.style.flex = "1";
