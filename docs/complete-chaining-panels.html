@@ -1,0 +1,773 @@
+<div id="container">
+
+  <script src="./js/26b39.js"></script>
+  <script src="./js/26b41.js"></script>
+  <script src="./js/26b43.js"></script>
+  <script src="./js/26b56.js"></script>
+  <script src="./js/26c11.js"></script>
+  <script>
+    function generateRandomGridData(cols, rows, umin, umax, unum, sepc=";") {
+      const grid = [];
+      const gridTxt = [];
+
+      // step size (IMPORTANT: unum includes endpoints)
+      const step = (umax - umin) / (unum - 1);
+
+      // build allowed values
+      const values = [];
+      for (let i = 0; i < unum; i++) {
+        values.push(umin + i * step);
+      }
+
+      // generate grid
+      for (let r = 0; r < rows; r++) {
+        const row = [];
+        const rowTxt = [];
+
+        for (let c = 0; c < cols; c++) {
+          // pick random value from allowed set
+          const v = values[Math.floor(Math.random() * values.length)];
+
+          // format like ".45" instead of "0.45"
+          const vTxt = v.toFixed(2).replace(/^0/, "");
+
+          row.push(v);
+          rowTxt.push(vTxt);
+        }
+        grid.push(row);
+        gridTxt.push(rowTxt.join(sepc));
+      }
+
+      // return as multiline string
+      return grid, gridTxt.join("\n");
+    }
+    function readGridDataFromTextarea(id, sepc=";") {
+      const el = document.getElementById(id);
+      if (!(el instanceof HTMLTextAreaElement)) return null;
+
+      const lines = el.value.trim().split("\n");
+
+      const grid = lines.map(line => {
+        return line.split(sepc).map(v => parseFloat(v));
+      });
+
+      return grid; // 2D array [rows][cols]
+    }
+    function drawGridOnCanvas(canvasId, grid, CL_arr, umin, umax, unum=null) {
+      if(unum === null) {
+        // infer from CL_arr length
+        unum = CL_arr.length;
+      }
+      
+      const canvas = document.getElementById(canvasId);
+      if (!(canvas instanceof HTMLCanvasElement)) return;
+
+      const ctx = canvas.getContext("2d");
+
+      const rows = grid.length;
+      const cols = grid[0].length;
+
+      // set canvas size (important!)
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+
+      const cellW = canvas.width / cols;
+      const cellH = canvas.height / rows;
+
+      const step = (umax - umin) / (unum - 1);
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const v = grid[r][c];
+
+          // compute index
+          let idx = Math.round((v - umin) / step);
+
+          // clamp (safety)
+          idx = Math.max(0, Math.min(CL_arr.length - 1, idx));
+
+          ctx.fillStyle = CL_arr[idx];
+          ctx.fillRect(c * cellW, r * cellH, cellW, cellH);
+        }
+      }
+    }
+
+    function generateRandomChooseData(N, xmin, xmax, ymin, ymax) {
+      const chooseData = [];
+      for (let i = 0; i < N; i++) {
+        let x = Math.floor(Math.random() * (xmax - xmin + 1)) + xmin;
+        let y = Math.floor(Math.random() * (ymax - ymin + 1)) + ymin;
+        if(x == xmax) x = xmax - 1; // ensure within bounds
+        if(y == ymax) y = ymax - 1; // ensure within bounds
+        chooseData.push({x, y});
+      }
+      console.log(`Generated choose point: (${chooseData[0].x}, ${chooseData[0].y}), (${chooseData[1].x}, ${chooseData[1].y})`);
+      return chooseData;
+    }
+
+    function chooseGridOnCanvas(canvasId, chooseData, rows, cols, CL_arr) {
+      const canvas = document.getElementById(canvasId);
+      if (!(canvas instanceof HTMLCanvasElement)) return;
+
+      const ctx = canvas.getContext("2d");
+
+      const cellW = canvas.width / cols;
+      const cellH = canvas.height / rows;
+
+      chooseData.forEach((point, idx) => {
+        const {x, y} = point;
+        ctx.fillStyle = CL_arr[idx % CL_arr.length];
+        ctx.fillRect(x * cellW, y * cellH, cellW, cellH);
+      });
+    }
+
+    function addSnow(grid, emptyVal, landVal, snowVal) {
+      const newGrid = grid.map(row => row.slice());
+
+      const dirs = [
+        [-1,-1], [-1,0], [-1,1],
+        [ 0,-1],         [ 0,1],
+        [ 1,-1], [ 1,0], [ 1,1]
+      ];
+
+      for (let r = 0; r < grid.length; r++) {
+        for (let c = 0; c < grid[0].length; c++) {
+
+          if (grid[r][c] !== landVal) continue;
+
+          let hasSnow = false;
+          let hasEmpty = false;
+
+          for (const [dr, dc] of dirs) {
+            const nr = r + dr;
+            const nc = c + dc;
+
+            if (
+              nr >= 0 &&
+              nr < grid.length &&
+              nc >= 0 &&
+              nc < grid[0].length
+            ) {
+              const val = grid[nr][nc];
+
+              if (val === snowVal) hasSnow = true;
+              if (val === emptyVal) hasEmpty = true;
+            }
+          }
+
+          if (!hasSnow && hasEmpty) {
+            newGrid[r][c] = snowVal;
+
+          }
+        }
+      }
+      return newGrid;
+    }
+
+    // ---------- modal creator ----------
+    function makeModal(htmlContent) {
+
+      const overlay = document.createElement("div");
+      overlay.style.position = "fixed";
+      overlay.style.left = "0";
+      overlay.style.top = "0";
+      overlay.style.width = "100vw";
+      overlay.style.height = "100vh";
+      overlay.style.background = "rgba(0,0,0,0.55)";
+      overlay.style.display = "flex";
+      overlay.style.justifyContent = "center";
+      overlay.style.alignItems = "flex-start";
+      overlay.style.paddingTop = "60px";
+      overlay.style.zIndex = "9999";
+
+      const box = document.createElement("div");
+      box.style.background = "white";
+      box.style.padding = "16px";
+      box.style.minWidth = "320px";
+      box.style.border = "1px solid black";
+      box.style.fontFamily = "sans-serif";
+
+      box.innerHTML = htmlContent;
+
+      overlay.append(box);
+      document.body.append(overlay);
+
+      return overlay;
+    }
+
+
+    // ---------- step 1 ----------
+    function askContinue() {
+
+      const modal = makeModal(`
+        <div style="margin-bottom:12px;">
+          ${location.href} says<br><br>
+          Do you want to continue?
+        </div>
+
+        <div style="display:flex; gap:8px; justify-content:center;">
+          <button id="m-ok">OK</button>
+          <button id="m-cancel">Cancel</button>
+        </div>
+      `);
+
+      modal.querySelector("#m-ok").onclick = () => {
+        modal.remove();
+        askName();
+      };
+
+      modal.querySelector("#m-cancel").onclick = () => {
+        modal.remove();
+        askContinue(); // loops forever
+      };
+    }
+
+
+    // ---------- step 2 ----------
+    function askName() {
+
+      const modal = makeModal(`
+        <div style="margin-bottom:12px;">
+          Who are you?
+        </div>
+
+        <input id="m-name" value="Guest"
+          style="width:100%; box-sizing:border-box; margin-bottom:12px;">
+
+        <div style="display:flex; gap:8px; justify-content:center;">
+          <button id="m-ok">OK</button>
+          <button id="m-cancel">Cancel</button>
+        </div>
+      `);
+
+      const inp = modal.querySelector("#m-name");
+      inp.focus();
+      inp.select();
+
+      modal.querySelector("#m-cancel").onclick = () => {
+        modal.remove();
+        showWelcome(null);
+      };
+
+      modal.querySelector("#m-ok").onclick = () => {
+
+        let val = inp.value.trim();
+
+        if(val === "" || val === "Guest") {
+          val = null;
+        }
+
+        modal.remove();
+        showWelcome(val);
+      };
+    }
+
+
+    // ---------- step 3 ----------
+    function showWelcome(name) {
+
+      const txt = name === null
+        ? "Welcome, null"
+        : "Welcome, " + name;
+
+      const modal = makeModal(`
+        <div style="margin-bottom:12px;">
+          ${txt}
+        </div>
+
+        <div style="text-align:center;">
+          <button id="m-ok">OK</button>
+        </div>
+      `);
+
+      modal.querySelector("#m-ok").onclick = () => {
+        modal.remove();
+      };
+    }
+  </script>
+
+  <script>
+  // define global variables
+  let cols, rows, umin, umax, unum, sepc;
+  let gridOutput, chooseOutput; 
+  let CL_arr;
+  let xmin, xmax, ymin, ymax;
+  let landCols, landRows, landNumc;
+  let landGridOutput, landOutput, landCl_arr;
+
+  // Instantiate containers, textarea, canvas, and buttons except div 6
+  const cnt = getContainer("container");
+  const row1Div = createDiv("row-1-panel");
+  const row2Div = createDiv("row-2-panel");
+  const row3Div = createDiv("row-3-panel");
+  
+  const div1 = createDiv("panel-1");
+  const inTx1 = createTextarea("params-1", "15em", "params-1");
+  const outTx1 = createTextarea("grid", "15em", "grid");
+  const btn1Div = createDiv("button-1-container");
+  const w1Btn = createButton("w1-button", "wipe-1");
+  const d1Btn = createButton("d1-button", "data-1");
+  const r1Btn = createButton("r1-button", "read-1", disabled=true);
+  const e1Btn = createButton("e1-button", "exec-1", disabled=true);
+
+  const div2 = createDiv("panel-2");
+  const inTx2 = createTextarea("params-2", "15em", "params-2");
+  const outCan2 = createCanvas("grid-output", "11em");
+  const outCan2Div = createDiv("grid-output-container");
+  const btn2Div = createDiv("button-2-container");
+  const w2Btn = createButton("w2-button", "wipe-2");
+  const d2Btn = createButton("d2-button", "data-2", disabled=true);
+  const r2Btn = createButton("r2-button", "read-2", disabled=true);
+  const e2Btn = createButton("e2-button", "exec-2", disabled=true);
+
+  const div3 = createDiv("panel-3");
+  const inTx3 = createTextarea("params-3", "15em", "params-3");
+  const outCan3 = createCanvas("choose-output", "11em");
+  const outCan3Div = createDiv("choose-output-container");
+  const btn3Div = createDiv("button-3-container");
+  const w3Btn = createButton("w3-button", "wipe-3");
+  const d3Btn = createButton("d3-button", "data-3", disabled=true);
+  const r3Btn = createButton("r3-button", "read-3", disabled=true);
+  const e3Btn = createButton("e3-button", "exec-3", disabled=true);
+
+  const wBtnDiv = createDiv("w-button-container");
+  const wBtn = createButton("w-button", "wipe");
+
+  const div5 = createDiv("panel-5");
+  const inTx5Div = createDiv("params-5-container");
+  const inTx5 = createTextarea("params-5", "6em", "params-input");
+  const inAg5 = createTextarea("agents-5", "6em", "agents-input");
+  const btn5Div = createDiv("button-5-container");
+  const w5Btn = createButton("w5-button", "wipe");
+  const d5Btn = createButton("d5-button", "data");
+  const r5Btn = createButton("r5-button", "read", disabled=true);
+  const e5Btn = createButton("e5-button", "exec", disabled=true);
+  const n5Btn = createButton("n5-button", "none", disabled=true);
+  const i5Btn = createButton("i5-button", "info");
+  const outCan5 = createCanvas("output-5", "7em");
+
+  const div6 = createDiv("panel-6");
+
+  //Define layout by appending elements to the container and panels
+  cnt.append(row1Div);
+    row1Div.append(div1);
+      div1.append(inTx1);
+      div1.append(btn1Div);
+        btn1Div.append(w1Btn);
+        btn1Div.append(d1Btn);
+        btn1Div.append(r1Btn);
+        btn1Div.append(e1Btn);
+      div1.append(outTx1);
+    row1Div.append(div2);
+      div2.append(inTx2);
+      div2.append(btn2Div);
+        btn2Div.append(w2Btn);
+        btn2Div.append(d2Btn);
+        btn2Div.append(r2Btn);
+        btn2Div.append(e2Btn);
+      div2.append(outCan2Div);
+        outCan2Div.append(outCan2);
+  
+  cnt.append(row2Div);
+    row2Div.append(div3);
+      div3.append(inTx3);
+      div3.append(btn3Div);
+        btn3Div.append(w3Btn);
+        btn3Div.append(d3Btn);
+        btn3Div.append(r3Btn);
+        btn3Div.append(e3Btn);
+      div3.append(outCan3Div);
+        outCan3Div.append(outCan3);
+    row2Div.append(wBtnDiv);
+      wBtnDiv.append(wBtn);
+
+  cnt.append(row3Div);
+    row3Div.append(div5);
+      div5.append(inTx5Div);
+        inTx5Div.append(inTx5);
+        inTx5Div.append(inAg5);
+      div5.append(btn5Div);
+        btn5Div.append(w5Btn);
+        btn5Div.append(d5Btn);
+        btn5Div.append(r5Btn);
+        btn5Div.append(e5Btn);
+        btn5Div.append(n5Btn);
+        btn5Div.append(i5Btn);
+      div5.append(outCan5);
+    row3Div.append(div6);
+  
+  cnt.style.display = "flex";
+  cnt.style.flexDirection = "column";
+    row1Div.style.display = "flex";
+    row1Div.style.flexDirection = "row";
+      div1.style.display = "flex";
+      div1.style.flexDirection = "row";
+      div2.style.marginLeft = "10px";
+      div2.style.display = "flex";
+      div2.style.flexDirection = "row";
+    row2Div.style.display = "flex";
+    row2Div.style.flexDirection = "row";
+      div3.style.display = "flex";
+      div3.style.flexDirection = "row";
+      wBtnDiv.style.alignSelf = "flex-start";
+      wBtnDiv.style.marginLeft = "10px";
+      // wBtn.style.marginRight = "10px";
+        wBtn.style.maginLeft = "20px";
+        wBtn.style.width = "20%";
+        wBtn.style.height = "auto";
+    row3Div.style.display = "flex";
+    row3Div.style.flexDirection = "row";
+      div5.style.display = "flex";
+      div5.style.flexDirection = "column";
+        inTx5Div.style.display = "flex";
+        inTx5Div.style.flexDirection = "row";
+        btn5Div.style.display = "flex";
+        btn5Div.style.flexDirection = "row";
+        // btn5Div.style.height = "40px";
+      div6.style.display = "flex";
+      div6.style.flexDirection = "column";
+      div6.style.marginLeft = "10px";
+      div6.style.gap = "2px";
+      div6.style.alignSelf = "flex-start";
+
+  // Change elements flex value
+  // cnt.style.height = "555px";
+  cnt.style.width = "100%";
+  changeElementsFlex(
+    ["row-1-panel", "1"],
+    ["row-2-panel", "1"],
+    ["row-3-panel", "1"],
+
+    ["panel-1", "1"],
+    ["panel-2", "1"],
+
+    ["params-1", "2"],
+    ["button-1-container", "1"] , 
+    ["grid", "2"] , 
+
+    ["params-2", "2"],
+    ["button-2-container", "1"] , 
+    ["grid-output-container", "2"] , 
+
+    ["panel-3", "1"],
+    ["w-button-container", "1"],
+
+    ["params-3", "2"],
+    ["button-3-container", "1"] , 
+    ["choose-output-container", "2"] , 
+
+    ["panel-5", "1"],
+    ["panel-6", "1"],
+
+    ["params-5-container", "1"],
+    ["button-5-container", "0.5"],
+    ["output-5", "0.5"],
+
+    ["params-5", "1"],
+    ["agents-5", "2"],
+  );
+
+  // panel 6 stuff
+
+  // ---------- make 5 rows ----------
+  const progData = [];
+  const buttonLabels = ["scan", "filter", "format", "sort", "erase"];
+
+  for(let i = 1; i <= 5; i++) {
+
+    const row = createDiv("prog-row-" + i);
+    row.style.display = "flex";
+    row.style.flexDirection = "row";
+    row.style.alignItems = "center";
+    row.style.gap = "10px";
+
+    const btn = createButton("prog-btn-" + i, buttonLabels[i - 1]);
+
+    btn.style.width = "60px";
+
+    const outer = createDiv("bar-outer-" + i);
+    outer.style.flex = "1";
+    outer.style.height = "20px";
+    outer.style.border = "1px solid black";
+    outer.style.background = "#ddd";
+    outer.style.position = "relative";
+
+    const inner = createDiv("bar-inner-" + i);
+    inner.style.width = "0%";
+    inner.style.height = "100%";
+    inner.style.background = "#00f";
+
+    outer.append(inner);
+
+    row.append(btn);
+    row.append(outer);
+    div6.append(row);
+
+    progData.push({
+      btn,
+      inner,
+      progress: 0,
+      running: false,
+      done: false,
+      label: "task-" + i,
+      timer: null
+    });
+  }
+
+  // Set onclick event to each button
+  w1Btn.addEventListener("click", () => {
+    inTx1.value = "";
+    outTx1.value = "";
+  });
+  d1Btn.addEventListener("click", () => {
+    inTx1.value = "COLS 9";
+    inTx1.value += "\n" + "ROWS 11";
+    inTx1.value += "\n" + "UMIN 0.20";
+    inTx1.value += "\n" + "UMAX 0.70";
+    inTx1.value += "\n" + "UNUM 11";
+    inTx1.value += "\n" + "SEPC ;";
+
+    r1Btn.disabled = false;
+  });
+  r1Btn.addEventListener("click", () => {
+    let key, line;
+    
+    key = "COLS";
+    cols = readParamFromTextarea("params-1", key, type="int");
+    key = "ROWS";
+    rows = readParamFromTextarea("params-1", key, type="int");
+    key = "UMIN";
+    umin = readParamFromTextarea("params-1", key, type="float");
+    key = "UMAX";
+    umax = readParamFromTextarea("params-1", key, type="float");
+    key = "UNUM";
+    unum = readParamFromTextarea("params-1", key, type="float");
+    key = "SEPC";
+    sepc = readParamFromTextarea("params-1", key);
+
+    e1Btn.disabled = false;
+    d2Btn.disabled = false;
+    d3Btn.disabled = false;
+  });
+  e1Btn.addEventListener("click", () => {
+    // generate random grid data with
+    // cols x row size and values = [umin, umax]
+    // the data is in steps of (umax-umin)/unum
+    let gridOutputTxt;
+    gridOutput, gridOutputTxt = generateRandomGridData(cols, rows, umin, umax, unum);
+    outTx1.value = gridOutputTxt;
+  });
+
+  w2Btn.addEventListener("click", () => {
+    inTx2.value = "";
+    outCan2.getContext("2d").clearRect(0, 0, outCan2.width, outCan2.height);
+  });
+  d2Btn.addEventListener("click", () => {
+    inTx2.value = "CNUM 11";
+    inTx2.value += "\n" + "CL00 #522";
+    inTx2.value += "\n" + "CL01 #622";
+    inTx2.value += "\n" + "CL02 #722";
+    inTx2.value += "\n" + "CL03 #822";
+    inTx2.value += "\n" + "CL04 #922";
+    inTx2.value += "\n" + "CL05 #a22";
+    inTx2.value += "\n" + "CL06 #b22";
+    inTx2.value += "\n" + "CL07 #c22";
+    inTx2.value += "\n" + "CL08 #d22";
+    inTx2.value += "\n" + "CL09 #e22";
+    inTx2.value += "\n" + "CL10 #f22";
+
+    r2Btn.disabled = false;
+  });
+  r2Btn.addEventListener("click", () => {
+    let key, line;
+    
+    CL_arr = [];
+    for (let i = 0; i < unum; i++) {
+      key = "CL" + i.toString().padStart(2, "0");
+      CL_arr.push(readParamFromTextarea("params-2", key));
+    }
+
+    e2Btn.disabled = false;
+  });
+  e2Btn.addEventListener("click", () => {
+    gridOutput = readGridDataFromTextarea("grid");
+    drawGridOnCanvas("grid-output", gridOutput, CL_arr, umin, umax, unum);
+  });
+
+  w3Btn.addEventListener("click", () => {
+    inTx3.value = "";
+    outCan3.getContext("2d").clearRect(0, 0, outCan3.width, outCan3.height);
+  });
+  d3Btn.addEventListener("click", () => {
+    inTx3.value = "XMIN 0";
+    inTx3.value += "\n" + "YMIN 0";
+    inTx3.value += "\n" + "XMAX 9";
+    inTx3.value += "\n" + "YMAX 11";
+
+    r3Btn.disabled = false;
+  });
+  r3Btn.addEventListener("click", () => {
+    let key, line;
+    
+    key = "XMIN";
+    xmin = readParamFromTextarea("params-3", key, type="int");
+    key = "YMIN";
+    ymin = readParamFromTextarea("params-3", key, type="int");
+    key = "XMAX";
+    xmax = readParamFromTextarea("params-3", key, type="int");
+    key = "YMAX";
+    ymax = readParamFromTextarea("params-3", key, type="int");
+
+    e3Btn.disabled = false;
+  });
+  e3Btn.addEventListener("click", () => {
+    gridOutput = readGridDataFromTextarea("grid");
+    drawGridOnCanvas("choose-output", gridOutput, CL_arr, umin, umax, unum);
+    chooseOutput = generateRandomChooseData(2, xmin, xmax, ymin, ymax);
+    CL_choose_arr = ["#00f", "#0f0"]; // blue, green
+    chooseGridOnCanvas("choose-output", chooseOutput, rows, cols, CL_choose_arr);
+  });
+
+  wBtn.addEventListener("click", () => {
+    // wipe all panels and reset variables
+    inTx1.value = "";
+    outTx1.value = "";
+    inTx2.value = "";
+    outCan2.getContext("2d").clearRect(0, 0, outCan2.width, outCan2.height);
+    inTx3.value = "";
+    outCan3.getContext("2d").clearRect(0, 0, outCan3.width, outCan3.height);
+
+    cols = rows = umin = umax = unum = sepc = null;
+    gridOutput = chooseOutput = CL_arr = null;
+
+    r1Btn.disabled = true;
+    e1Btn.disabled = true;
+    r2Btn.disabled = true;
+    e2Btn.disabled = true;
+    r3Btn.disabled = true;
+    e3Btn.disabled = true;
+  });
+
+  w5Btn.addEventListener("click", () => {
+    // wipe all panels and reset variables
+    inTx5.value = "";
+    inAg5.value = "";
+    outCan5.getContext("2d").clearRect(0, 0, outCan5.width, outCan5.height);
+    
+    r5Btn.disabled = true;
+    e5Btn.disabled = true;
+  });
+
+  d5Btn.addEventListener("click", () => {
+    inTx5.value = "# palette";
+    inTx5.value += "\n" + "NUMC 10";
+    inTx5.value += "\n" + "COL0 #888";
+    inTx5.value += "\n" + "COL1 #f22";
+    inTx5.value += "\n" + "COL2 #f33";
+    inTx5.value += "\n" + "COL3 #f44";
+    inTx5.value += "\n" + "COL4 #f55";
+    inTx5.value += "\n" + "COL5 #f66";
+    inTx5.value += "\n" + "COL6 #f77";
+    inTx5.value += "\n" + "COL7 #f88";
+    inTx5.value += "\n" + "COL8 #f99";
+    inTx5.value += "\n" + "COL9 #faa";
+
+    inAg5.value = "9;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0";
+    inAg5.value += "\n" + "9;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0";
+    inAg5.value += "\n" + "1;9;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0";
+    inAg5.value += "\n" + "1;9;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0";
+    inAg5.value += "\n" + "1;1;9;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0";
+    inAg5.value += "\n" + "1;1;1;9;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0";
+    inAg5.value += "\n" + "1;1;1;1;9;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0";
+    inAg5.value += "\n" + "1;1;1;1;1;1;9;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0";
+    inAg5.value += "\n" + "1;1;1;1;1;1;1;9;9;9;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0";
+    inAg5.value += "\n" + "1;1;1;1;1;3;1;1;1;1;9;9;9;9;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0";
+    inAg5.value += "\n" + "1;1;1;1;1;1;1;1;1;1;1;1;1;1;9;9;9;9;0;0;0;0;0;0;0;0;0;0;0;0;0;9;9;0;0;0;0;0;9;9";
+    inAg5.value += "\n" + "1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;9;0;0;0;0;0;0;0;0;0;0;9;9;1;1;1;0;0;0;1;1;1";
+    inAg5.value += "\n" + "1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;9;9;9;0;0;0;0;0;0;9;1;1;1;1;1;1;1;1;1;1;1";
+    inAg5.value += "\n" + "1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;9;9;0;0;0;0;9;1;1;1;1;1;1;1;1;1;1;1;1";
+    inAg5.value += "\n" + "1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;9;9;9;9;9;1;1;1;1;1;1;1;1;1;1;1;1;1";
+    inAg5.value += "\n" + "1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1";
+    inAg5.value += "\n" + "1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1";
+    inAg5.value += "\n" + "1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1";
+    inAg5.value += "\n" + "1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1";
+    inAg5.value += "\n" + "1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1";
+
+    r5Btn.disabled = false;
+  });
+
+  r5Btn.addEventListener("click", () => {
+    let key, line;
+
+    key = "NUMC";
+    landNumc = readParamFromTextarea("params-5", key, type="float");
+    
+    landCl_arr = [];
+    for (let i = 0; i < landNumc; i++) {
+      key = "COL" + i;
+      landCl_arr.push(readParamFromTextarea("params-5", key));
+    }
+
+    landGridOutput = readGridDataFromTextarea("agents-5");
+    landRows = landGridOutput.length;
+    landCols = landGridOutput[0].length;
+    drawGridOnCanvas("output-5", landGridOutput, landCl_arr, 0, landNumc-1);
+
+    e5Btn.disabled = false;
+  });
+
+  e5Btn.addEventListener("click", () => {
+    // add snow
+    landOutput = addSnow(landGridOutput, 0, 1, landNumc-1);
+    drawGridOnCanvas("output-5", landOutput, landCl_arr, 0, landNumc-1);
+  });
+
+  i5Btn.addEventListener("click", () => {
+    askContinue();
+  });
+
+  // panel 6 buttons
+  // ---------- button logic ----------
+  progData.forEach(obj => {
+
+    obj.btn.addEventListener("click", () => {
+
+      if(obj.done) return;
+
+      if(obj.running) {
+        // pause
+        clearInterval(obj.timer);
+        obj.running = false;
+        obj.btn.textContent = obj.label;
+      }
+      else {
+        // resume/start
+        obj.running = true;
+        obj.btn.textContent = "stop";
+
+        obj.timer = setInterval(() => {
+
+          obj.progress += 1;   // speed
+
+          if(obj.progress >= 100) {
+            obj.progress = 100;
+            clearInterval(obj.timer);
+            obj.running = false;
+            obj.done = true;
+            obj.btn.disabled = true;
+          }
+
+          obj.inner.style.width = obj.progress + "%";
+
+        }, 100); // constant speed
+
+      }
+
+    });
+
+  });
+  </script>
+</div>
+
+<br>
+<a href="index.html">← Go back</a>
