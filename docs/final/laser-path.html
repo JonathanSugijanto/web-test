@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Light Path Simulator</title>
+
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<h1>Light Path Simulator</h1>
+<p id="description">A simulator for light path in a medium with spatially varying refractive index.</p>
+<p id="meta"></p>
+
+<div class="container">
+
+<div class="left-panel">
+
+<label><b>Index of Refraction</b></label>
+<p>n(x,y) =</p>
+<input id="n-input" type="text" value="x+1">
+<button class="apply-btn" id="apply-btn">Apply</button>
+
+<label><b>Laser Spec</b></label>
+<textarea id="laser-input">0;0.5;45;#ff0000</textarea>
+<button class="run-btn" id="run-btn" disabled>Run</button>
+
+<label><b>Output Terminal</b></label>
+<textarea id="output-terminal" readonly placeholder="Simulation status and results will appear here..."></textarea>
+
+</div>
+
+<div class="right-panel">
+<div class="canvas-container">
+<canvas id="canvas"></canvas>
+</div>
+</div>
+
+</div>
+
+<div class="info-block toc">
+<h2>Table of Contents</h2>
+<a href="#simulation">Simulation Description</a>
+<a href="#usage">How to Use</a>
+<a href="#method">How It Works</a>
+</div>
+
+<div id="simulation" class="info-block">
+<h2>Simulation Description</h2>
+<p>This web simulates the path of light from one or more laser in a custom medium. The simulation is based on Snell's Law, so reflection and intensity variation are not accounted for. In addition, the simulation is limited in a 2D space with a rectangular medium.</p>
+<p>In this mockup version, the simulation doesn't work yet. The visualization given is just a placeholder.</p>
+</div>
+
+<div id="usage" class="info-block">
+<h2>How to Use</h2>
+<p>This application has two inputs:</p>
+<ul>
+<li>n(x,y): math expression <br>
+The index of refraction of the medium, as a function of x and y. The expression should be parsable by JavaScript's eval() function, with x and y as variables. For example, "x^2 + y^2" or "Math.sin(x) * Math.cos(y)".</li>
+</li>
+
+<li>Laser spec: side;position;angle;color <br>
+The specification of the laser(s) to be simulated. Each laser is defined by its rectangle side hit (left (0), top (1)), position of incidence (normalized distance from the top left corner of the rectangle), angle relative to the normal of the sides (in degrees), and display color (in hex format). Multiple lasers can be specified by separating them with new lines. 
+</li>
+</ul>
+
+<p>This application has two outputs:</p>
+<ul>
+<li>Canvas<br>
+Visual representation of the light paths inside and outside the medium. The rectangle itelf will be colored according to the index of refraction, with darker color representing higher index.
+</li>
+<li>Output Terminal<br>
+Textual display of simulation status and results.
+</li>
+</ul>
+</div>
+
+<div id="method" class="info-block">
+<h2>How It Works</h2>
+<p>The rectangle is split into a grid of cells. In this grid, the laser is treated as an object that occupies a single cell and have a direction of travel. In each iteration, the object has a probability of going either one step along the x axis or y axis with the probability proportional to the direction's components. Everytime the object moves by one cell, Snell's Law is applied. Using the the target and origin cell's index of refraction as well as the initial direction, the new direction after refraction is calculated. The interface of the refraction is taken to be the border between cells.</p>
+<p>The simulation is run until all lasers exit the medium or a maximum number of iterations is reached. The position of each laser is tracked throughout the simulation and displayed on the canvas.</p>
+</div>
+
+<div class="footer">
+<a href="./index.html">← Go back</a>
+</div>
+
+<script src="simulator.js"></script>
+
+</body>
+</html>

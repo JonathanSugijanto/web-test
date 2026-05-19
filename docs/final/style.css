@@ -1,0 +1,107 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  background: #f5f5f5;
+}
+
+h1 {
+  margin-bottom: 5px;
+}
+
+.container {
+  display: flex;
+  gap: 20px;
+  align-items: stretch;
+}
+
+.left-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.right-panel {
+  flex: 1;
+}
+
+textarea,
+input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+textarea {
+  resize: vertical;
+}
+
+#laser-input {
+  height: 70px;
+}
+
+#output-terminal {
+  height: 160px;
+  background: #111;
+  color: #0f0;
+  font-family: monospace;
+}
+
+button {
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+button:disabled {
+  background: #999;
+  cursor: not-allowed;
+}
+
+.apply-btn {
+  background: #4CAF50;
+  color: white;
+}
+
+.run-btn {
+  background: #2196F3;
+  color: white;
+}
+
+.canvas-container {
+  width: 100%;
+  height: 650px;
+  background: white;
+  border: 1px solid black;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.info-block {
+  margin-top: 40px;
+  background: white;
+  padding: 20px;
+  border-radius: 14px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.08);
+}
+
+.toc a {
+  display: block;
+  margin: 5px 0;
+  color: blue;
+}
+
+.footer {
+  margin-top: 30px;
+}
