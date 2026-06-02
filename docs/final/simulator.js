@@ -3,14 +3,18 @@ const meta = document.getElementById("meta");
 meta.innerText =
   "Author: Jonathan Sugijanto | Launch Date: 5/19/2026";
 
-const GRID_X = 100000;
-const GRID_Y = 100000;
+let GRID_X = 100000;
+let GRID_Y = 100000;
+const maxSteps = 1000000;
 
 // GRID should be divisible by DRAW_GRID for simplicity of drawing
 const DRAW_GRID_X = 100;
 const DRAW_GRID_Y = 100;
 
 const c = 299792458; // assume the medium is 1 x 1 m^2 in size
+
+const paramInput = document.getElementById("param-input");
+const paramBtn = document.getElementById("param-btn");
 
 const applyBtn = document.getElementById("apply-btn");
 const runBtn = document.getElementById("run-btn");
@@ -82,6 +86,87 @@ function resizeCanvas() {
 }
 
 window.addEventListener("resize", resizeCanvas);
+
+function parseParameters() {
+
+  const lines =
+    paramInput.value.split("\n");
+
+  let newResolution = GRID_X;
+
+  for(const line of lines) {
+
+    if(line.trim() === "")
+      continue;
+
+    const vals =
+      line.split(":");
+
+    if(vals.length < 2)
+      continue;
+
+    const key =
+      vals[0].trim().toLowerCase();
+
+    const value =
+      vals[1].trim();
+
+    switch(key) {
+
+      case "resolution":
+
+        newResolution =
+          parseInt(value);
+
+        if(
+          !Number.isInteger(newResolution)
+          || newResolution <= 0
+        ) {
+          throw new Error(
+            "Resolution must be a positive integer."
+          );
+        }
+
+        break;
+
+      default:
+
+        log(
+          `Unknown parameter ignored: ${key}`
+        );
+    }
+  }
+
+  GRID_X = newResolution;
+  GRID_Y = newResolution;
+
+  log(
+    `Resolution changed to ${GRID_X} x ${GRID_Y}`
+  );
+}
+
+function changeParameters() {
+
+  try {
+
+    parseParameters();
+
+    applied = false;
+    runBtn.disabled = true;
+
+    log(
+      "Medium must be reapplied."
+    );
+
+  } catch(err) {
+
+    log(
+      "PARAMETER ERROR"
+    );
+
+    log(err.message);
+  }
+}
 
 function parseFunction(expr) {
   expr = expr.replaceAll("^", "**");
@@ -372,7 +457,6 @@ function simulateLaser(laser) {
   theta = laser.angle * Math.PI / 180;
 
   let steps = 0;
-  const maxSteps = 500000;
   // const maxSteps = 3;
 
   while(
@@ -922,12 +1006,11 @@ function exportAllData() {
     } s`
   );
 }
+paramBtn.onclick = changeParameters;
 
-applyBtn.onclick =
-  applyMedium;
+applyBtn.onclick = applyMedium;
 
-runBtn.onclick =
-  runSimulation;
+runBtn.onclick = runSimulation;
 
 graphBtn.onclick = generateGraphs;
 
