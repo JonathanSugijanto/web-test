@@ -5,7 +5,7 @@ meta.innerText =
 
 let GRID_X = 100000;
 let GRID_Y = 100000;
-const maxSteps = 1000000;
+let maxSteps = 1000000;
 
 // GRID should be divisible by DRAW_GRID for simplicity of drawing
 const DRAW_GRID_X = 100;
@@ -93,6 +93,7 @@ function parseParameters() {
     paramInput.value.split("\n");
 
   let newResolution = GRID_X;
+  let newMaxSteps = maxSteps;
 
   for(const line of lines) {
 
@@ -128,7 +129,18 @@ function parseParameters() {
         }
 
         break;
+      case "maxsteps":
 
+        newMaxSteps =
+          parseInt(value);
+        if(
+          !Number.isInteger(newMaxSteps)
+          || newMaxSteps <= 0
+        ) {
+          throw new Error(
+            "Max steps must be a positive integer."
+          );
+        }
       default:
 
         log(
@@ -139,6 +151,7 @@ function parseParameters() {
 
   GRID_X = newResolution;
   GRID_Y = newResolution;
+  maxSteps = newMaxSteps;
 
   log(
     `Resolution changed to ${GRID_X} x ${GRID_Y}`
@@ -783,7 +796,7 @@ async function runSimulation() {
 
       log(
         `Exit angle: ${
-          result.exitAngle.toFixed(2) % 360
+          result.exitAngle.toFixed(4) % 360
         } deg`
       );
 
