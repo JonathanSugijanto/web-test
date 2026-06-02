@@ -822,8 +822,8 @@ async function runSimulation() {
 
     log(
       `Calculation duration: ${
-        ((t1 - t0)/1000)
-        .toFixed(6)
+        ((t1 - t0)/1000.0)
+        .toFixed(4)
       } s`
     );
 
