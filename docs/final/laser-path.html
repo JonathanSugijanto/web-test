@@ -24,7 +24,7 @@
 <button class="apply-btn" id="apply-btn">Apply</button>
 
 <label><b>Laser Spec</b></label>
-<textarea id="laser-input">0;0.5;45;#ff0000</textarea>
+<textarea id="laser-input">0;0.5;22.5;#ff0000</textarea>
 <button class="run-btn" id="run-btn" disabled>Run</button>
 
 <label><b>Output Terminal</b></label>
@@ -37,6 +37,57 @@
 <canvas id="canvas"></canvas>
 </div>
 </div>
+
+</div>
+
+<!-- Time-series graphs -->
+
+<div class="info-block">
+
+<h2>Trajectory Analysis</h2>
+
+<p>
+Position and propagation angle as a function of time.
+</p>
+<button class="graph-btn" id="graph-btn" disabled>
+Generate Graphs
+</button>
+
+<div class="graph-grid">
+
+<div class="graph-panel">
+<h3>x(t)</h3>
+<canvas id="x-graph"></canvas>
+</div>
+
+<div class="graph-panel">
+<h3>y(t)</h3>
+<canvas id="y-graph"></canvas>
+</div>
+
+<div class="graph-panel">
+<h3>θ(t)</h3>
+<canvas id="theta-graph"></canvas>
+</div>
+
+</div>
+
+</div>
+
+<!-- Raw data output -->
+
+<div class="info-block">
+
+<h2>Raw Data JSON Output</h2>
+<button class="export-btn" id="export-btn" disabled>
+Export JSON
+</button>
+
+<textarea
+id="raw-output"
+readonly
+placeholder="Simulation data will appear here..."
+></textarea>
 
 </div>
 
